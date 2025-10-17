@@ -65,7 +65,7 @@ def login(user: UserLogin):
     return LoginResponse(access_token=token)
 
 # -----------------------------
-# Example Protected Route
+# Protected Route Test
 # -----------------------------
 @router.get("/me")
 def get_me(current_user: dict = Depends(get_current_user)):

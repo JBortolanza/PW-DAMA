@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+gunicorn
+pymongo
+python-jose
+passlib[argon2]
+python-dotenv

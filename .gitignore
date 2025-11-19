@@ -1,2 +1,4 @@
 /.env
 /venv/
+/app/__pycache__/
+/routes/__pycache__/

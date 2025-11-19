@@ -1,5 +1,5 @@
 # app/routes/users.py
-from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi import APIRouter, HTTPException, Depends, status, Response
 from datetime import datetime
 from app.models import UserCreate, UserLogin, LoginResponse, UserPublic
 from app.db import db
@@ -40,29 +40,34 @@ def register(user: UserCreate):
     return {"message": "User registered successfully"}
 
 # -----------------------------
-# Login Route
+# Login and Logout Routes
 # -----------------------------
-@router.post("/login", response_model=LoginResponse)
-def login(user: UserLogin):
+@router.post("/login")
+def login(user: UserLogin, response: Response):
     db_user = db["users"].find_one({"email": user.email})
-    
+
     if not db_user or not verify_password(user.password, db_user["password"]):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password"
-        )
-    
-    # Create JWT token
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+
     token = create_access_token({"sub": db_user["email"]})
 
-    # Prepare user info for response
-    user_public = UserPublic(
-        name=db_user["name"],
-        email=db_user["email"],
-        role=db_user.get("role", "user")
+    # Store JWT in HTTP-only cookie
+    response.set_cookie(
+        key="access_token",
+        value=token,
+        httponly=True,
+        secure=True,        # set False if in localhost without HTTPS
+        samesite="lax",
+        max_age=60 * 60,    # 1 hour
+        path="/"
     )
 
-    return LoginResponse(access_token=token)
+    return {"message": "Logged in successfully"}
+
+@router.post("/logout")
+def logout(response: Response):
+    response.delete_cookie("access_token", path="/")
+    return {"message": "Logged out"}
 
 # -----------------------------
 # Protected Route Test

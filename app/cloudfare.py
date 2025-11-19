@@ -44,7 +44,6 @@ class R2UploadService:
             HttpMethod='PUT'
         )
         
-        # This will now generate correct public URLs
         public_url = f"{self.public_base_url}/{file_key}"
         
         return {

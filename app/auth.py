@@ -1,7 +1,7 @@
 # app/auth.py
 from datetime import datetime, timedelta
 from typing import Optional
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from argon2 import PasswordHasher
@@ -55,19 +55,19 @@ def decode_access_token(token: str) -> Optional[dict]:
         return None
 
 # -----------------------------
-# FastAPI OAuth2 dependency
+# Cookie Authentication
 # -----------------------------
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/login")
 
-def get_current_user(token: str = Depends(oauth2_scheme)):
-    """Verify JWT token and return the user from MongoDB"""
+def get_current_user(request: Request):
+    """Get user from JWT stored in the HTTP-only cookie"""
+    token = request.cookies.get("access_token")
+
+    if not token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
     payload = decode_access_token(token)
     if not payload:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired token",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
 
     email = payload.get("sub")
     if not email:

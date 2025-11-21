@@ -1,10 +1,17 @@
 # app/routes/users.py
-from fastapi import APIRouter, HTTPException, Depends, status, Response
+import os
+from fastapi import APIRouter, HTTPException, Depends, status, Response, UploadFile, File
 from datetime import datetime
 from app.models import UserCreate, UserLogin, LoginResponse, UserPublic, UserUpdate
 from app.db import db
 from app.auth import hash_password, verify_password, create_access_token
 from app.auth import get_current_user
+
+# Caminho onde os avatares serão salvos no servidor
+AVATAR_FOLDER = "/var/www/html/images/avatars/custom"
+
+# Garantir que a pasta exista
+os.makedirs(AVATAR_FOLDER, exist_ok=True)
 
 router = APIRouter()
 
@@ -140,6 +147,54 @@ def update_avatar(avatar_url: str, current_user: dict = Depends(get_current_user
     )
     
     return Response(status_code=200)
+
+# -----------------------------
+# Upload Avatar (Upload File)
+# -----------------------------
+
+@router.post("/upload-avatar")
+async def upload_avatar(
+    file: UploadFile = File(...),
+    current_user: dict = Depends(get_current_user)
+):
+    # Verificar tipo de arquivo
+    if file.content_type not in ["image/jpeg", "image/png", "image/webp"]:
+        raise HTTPException(
+            status_code=400,
+            detail="Only JPG, PNG or WEBP images are allowed"
+        )
+
+    # Gerar nome único baseado no email do usuário
+    file_extension = file.filename.split(".")[-1]
+    safe_email = current_user["email"].replace("@", "_").replace(".", "_")
+
+    filename = f"{safe_email}_{datetime.utcnow().timestamp()}.{file_extension}"
+    file_path = os.path.join(AVATAR_FOLDER, filename)
+
+    # Salvar arquivo no servidor
+    try:
+        content = await file.read()
+        with open(file_path, "wb") as f:
+            f.write(content)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error saving file: {str(e)}")
+
+    # URL pública do avatar
+    avatar_url = f"https://pw.jan.bortolanza.vms.ufsc.br/images/avatars/custom/{filename}"
+
+    # Atualizar o avatar do usuário no banco
+    db["users"].update_one(
+        {"email": current_user["email"]},
+        {
+            "$set": {
+                "avatar": avatar_url,
+                "updated_at": datetime.utcnow()
+            }
+        }
+    )
+
+    return {"message": "Avatar uploaded successfully", "avatar_url": avatar_url}
+
 
 # -----------------------------
 # Protected Route Test

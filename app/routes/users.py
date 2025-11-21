@@ -1,7 +1,7 @@
 # app/routes/users.py
 from fastapi import APIRouter, HTTPException, Depends, status, Response
 from datetime import datetime
-from app.models import UserCreate, UserLogin, LoginResponse, UserPublic
+from app.models import UserCreate, UserLogin, LoginResponse, UserPublic, UserUpdate
 from app.db import db
 from app.auth import hash_password, verify_password, create_access_token
 from app.auth import get_current_user
@@ -11,6 +11,7 @@ router = APIRouter()
 # -----------------------------
 # Registration Route
 # -----------------------------
+
 @router.post("/register", status_code=201)
 def register(user: UserCreate):
     # Check if user already exists
@@ -31,6 +32,7 @@ def register(user: UserCreate):
         "name": user.name,
         "email": user.email,
         "password": hashed_pwd,
+        "avatar": "https://pw.jan.bortolanza.vms.ufsc.br/images/avatars/default/default_avatar.png",
         "role": "user",
         "is_active": True,
         "created_at": datetime.utcnow(),
@@ -42,6 +44,7 @@ def register(user: UserCreate):
 # -----------------------------
 # Login and Logout Routes
 # -----------------------------
+
 @router.post("/login")
 def login(user: UserLogin, response: Response):
     db_user = db["users"].find_one({"email": user.email})
@@ -70,13 +73,104 @@ def logout(response: Response):
     return {"message": "Logged out"}
 
 # -----------------------------
+# User Update Routes
+# -----------------------------
+
+@router.put("/update-profile")
+def update_profile(
+    user_update: UserUpdate,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Update user profile
+    """
+    try:
+        update_data = {}
+        
+        if user_update.name is not None:
+            update_data["name"] = user_update.name
+            
+        if user_update.email is not None and user_update.email != current_user["email"]:
+            # Verificar se email já existe
+            existing_user = db["users"].find_one({"email": user_update.email})
+            if existing_user:
+                raise HTTPException(status_code=400, detail="Email already exists")
+            update_data["email"] = user_update.email
+            
+        if user_update.location is not None:
+            update_data["location"] = user_update.location
+            
+        if user_update.bio is not None:
+            update_data["bio"] = user_update.bio
+        
+        if not update_data:
+            return {"message": "No changes made"}
+        
+        update_data["updated_at"] = datetime.utcnow()
+        
+        # Usar email para buscar (mais seguro)
+        result = db["users"].update_one(
+            {"email": current_user["email"]},
+            {"$set": update_data}
+        )
+        
+        return {"message": "Profile updated successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"UPDATE ERROR: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error updating profile")
+
+@router.put("/update-avatar")
+def update_avatar(avatar_url: str, current_user: dict = Depends(get_current_user)):
+    """
+    Update user avatar URL
+    Returns: HTTP 200
+    """
+    # Atualizar avatar
+    db["users"].update_one(
+        {"email": current_user["email"]},
+        {
+            "$set": {
+                "avatar": avatar_url,
+                "updated_at": datetime.utcnow()
+            }
+        }
+    )
+    
+    return Response(status_code=200)
+
+# -----------------------------
 # Protected Route Test
 # -----------------------------
+
 @router.get("/me")
 def get_me(current_user: dict = Depends(get_current_user)):
-    """Return info about the currently logged-in user"""
-    return {
-        "name": current_user["name"],
-        "email": current_user["email"],
-        "role": current_user.get("role", "user")
-    }
+    """
+    Get current user profile data
+    """
+    try:
+        # Já temos o usuário completo do get_current_user
+        # Não precisamos buscar novamente no banco!
+        
+        print(f"DEBUG - User from auth: {current_user}")
+        
+        # Retornar diretamente os dados do current_user
+        return {
+            "name": current_user.get("name", ""),
+            "email": current_user.get("email", ""),
+            "avatar": current_user.get("avatar", "https://pw.jan.bortolanza.vms.ufsc.br/images/avatars/default/default_avatar.png"),
+            "location": current_user.get("location", ""),
+            "bio": current_user.get("bio", ""),
+            "totalGames": current_user.get("totalGames", 0),
+            "wins": current_user.get("wins", 0),
+            "losses": current_user.get("losses", 0),
+            "draws": current_user.get("draws", 0),
+        }
+        
+    except Exception as e:
+        print(f"ERROR in /me: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail="Internal server error")

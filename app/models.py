@@ -19,6 +19,7 @@ class UserInDB(BaseModel):
     name: str
     email: EmailStr
     password: str
+    avatar: str
     role: Optional[str] = "user"
     is_active: bool = True
     created_at: datetime
@@ -32,6 +33,12 @@ class UserPublic(BaseModel):
 class LoginResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
+
+class UserUpdate(BaseModel):
+    name: Optional[str] = None
+    email: Optional[EmailStr] = None
+    location: Optional[str] = None
+    bio: Optional[str] = None
 
 # -----------------------------
 # RECORDING UPLOAD MODELS

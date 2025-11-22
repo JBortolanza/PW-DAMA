@@ -18,7 +18,7 @@ WorkingDirectory=/home/jan.bortolanza/pw
 Environment="PATH=/home/jan.bortolanza/pw/venv/bin"
 ExecStart=/home/jan.bortolanza/pw/venv/bin/gunicorn \
   -k uvicorn.workers.UvicornWorker \
-  -w 4 \
+  -w 1 \
   --bind 127.0.0.1:8000 \
   app.main:app
 Restart=always

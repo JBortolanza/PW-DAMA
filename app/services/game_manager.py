@@ -2,6 +2,9 @@ import uuid
 import json
 from typing import List, Dict, Any
 from fastapi import WebSocket
+from app.db import db
+from bson import ObjectId
+from datetime import datetime
 
 class GameManager:
     def __init__(self):
@@ -23,11 +26,13 @@ class GameManager:
         game_id = str(uuid.uuid4())
         self.active_games[game_id] = {
             "white_ws": None, "black_ws": None,
+            "white_user_id": None, "black_user_id": None, # Armazena IDs dos usuários
             "turn": "white",
             "board": self._get_initial_board(),
             "chain_piece": None,
             "last_move_from": None,
-            "last_move_to": None
+            "last_move_to": None,
+            "start_time": datetime.utcnow()
         }
         for s, c in [(p1, 'white'), (p2, 'black')]:
             try:
@@ -36,9 +41,11 @@ class GameManager:
             except: pass
 
     # --- GERENCIAMENTO DE CONEXÃO ---
-    async def connect_player(self, game_id: str, websocket: WebSocket, color: str):
+    # Agora aceita user_id para vincular o socket ao usuário do banco
+    async def connect_player(self, game_id: str, websocket: WebSocket, color: str, user_id: str):
         if game_id in self.active_games:
             self.active_games[game_id][f"{color}_ws"] = websocket
+            self.active_games[game_id][f"{color}_user_id"] = user_id # Salva o ID
             await self.broadcast_game_state(game_id)
         else: await websocket.close(code=4000)
 
@@ -47,24 +54,14 @@ class GameManager:
             if f"{color}_ws" in self.active_games[game_id]:
                 self.active_games[game_id][f"{color}_ws"] = None
 
-    # --- NOVA FUNÇÃO: ENCAMINHAMENTO DE MENSAGENS (CHAT/VÍDEO) ---
     async def forward_message(self, game_id: str, message: dict, sender_color: str):
-        """
-        Repassa mensagens genéricas (chat, webrtc signal) para o oponente.
-        """
         game = self.active_games.get(game_id)
         if not game: return
-        
-        # Define quem é o oponente
         opponent_color = "black" if sender_color == "white" else "white"
         ws = game.get(f"{opponent_color}_ws")
-        
-        # Envia a mensagem exatamente como chegou
         if ws:
-            try:
-                await ws.send_json(message)
-            except:
-                pass
+            try: await ws.send_json(message)
+            except: pass
 
     # --- GAMEPLAY & ESTADO ---
     async def send_individual_update(self, websocket: WebSocket, game: dict):
@@ -88,6 +85,10 @@ class GameManager:
     async def broadcast_game_over(self, game_id: str, winner: str, reason: str):
         game = self.active_games.get(game_id)
         if not game: return
+        
+        # ATUALIZA O BANCO DE DADOS
+        self._update_player_stats(game, winner)
+
         msg = {"type": "game_over", "winner": winner, "reason": reason}
         
         for c in ["white", "black"]:
@@ -100,6 +101,31 @@ class GameManager:
         
         if game_id in self.active_games:
             del self.active_games[game_id]
+
+    def _update_player_stats(self, game, winner_color):
+        """Atualiza estatísticas no MongoDB"""
+        try:
+            white_id = game.get("white_user_id")
+            black_id = game.get("black_user_id")
+            
+            if not white_id or not black_id:
+                return
+
+            white_oid = ObjectId(white_id)
+            black_oid = ObjectId(black_id)
+
+            if winner_color == "white":
+                db["users"].update_one({"_id": white_oid}, {"$inc": {"wins": 1, "totalGames": 1}})
+                db["users"].update_one({"_id": black_oid}, {"$inc": {"losses": 1, "totalGames": 1}})
+            elif winner_color == "black":
+                db["users"].update_one({"_id": black_oid}, {"$inc": {"wins": 1, "totalGames": 1}})
+                db["users"].update_one({"_id": white_oid}, {"$inc": {"losses": 1, "totalGames": 1}})
+            elif winner_color == "draw":
+                db["users"].update_one({"_id": white_oid}, {"$inc": {"draws": 1, "totalGames": 1}})
+                db["users"].update_one({"_id": black_oid}, {"$inc": {"draws": 1, "totalGames": 1}})
+                
+        except Exception as e:
+            print(f"Erro ao atualizar estatísticas: {e}")
 
     async def process_move(self, game_id: str, move_data: dict, player_color: str):
         game = self.active_games.get(game_id)
@@ -161,7 +187,7 @@ class GameManager:
                 try: await ws.send_json(msg)
                 except: pass
 
-    # --- VERIFICAÇÃO DE VITÓRIA / LÓGICA DE JOGO (Mantidas idênticas ao original) ---
+    # --- LÓGICA DE JOGO (Mantida) ---
     async def _check_win_conditions(self, board, current_player_color, opponent_color, game_id):
         opponent_pieces = sum(1 for row in board for piece in row if piece and piece['color'] == opponent_color)
         if opponent_pieces == 0:
@@ -178,7 +204,6 @@ class GameManager:
             else:
                 await self.broadcast_game_over(game_id, "draw", "stalemate")
                 return True
-
         return False
 
     def _has_any_valid_move(self, board, color):
@@ -187,10 +212,8 @@ class GameManager:
                 for c in range(8):
                     piece = board[r][c]
                     if piece and piece['color'] == color:
-                        if self._can_capture_from(board, {'r': r, 'c': c}, color):
-                            return True
+                        if self._can_capture_from(board, {'r': r, 'c': c}, color): return True
             return False 
-        
         for r in range(8):
             for c in range(8):
                 piece = board[r][c]
@@ -205,15 +228,11 @@ class GameManager:
         if not piece: return False
         forward = -1 if color == 'white' else 1
         directions = []
-        if piece.get('king'):
-            directions = [(-1, -1), (-1, 1), (1, -1), (1, 1)]
-        else:
-            directions = [(forward, -1), (forward, 1)]
-
+        if piece.get('king'): directions = [(-1, -1), (-1, 1), (1, -1), (1, 1)]
+        else: directions = [(forward, -1), (forward, 1)]
         for dr, dc in directions:
             tr, tc = r + dr, c + dc
-            if 0 <= tr < 8 and 0 <= tc < 8 and board[tr][tc] is None:
-                return True
+            if 0 <= tr < 8 and 0 <= tc < 8 and board[tr][tc] is None: return True
         return False
 
     def _validate_move_logic(self, game, o, t, color):

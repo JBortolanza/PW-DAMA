@@ -2,14 +2,13 @@ import uuid
 import json
 from typing import List, Dict, Any
 from fastapi import WebSocket
-# Removido import asyncio
 
 class GameManager:
     def __init__(self):
         self.waiting_queue: List[WebSocket] = []
         self.active_games: Dict[str, Dict[str, Any]] = {}
 
-    # --- MATCHMAKING (Mantido) ---
+    # --- MATCHMAKING ---
     async def add_to_queue(self, websocket: WebSocket):
         self.waiting_queue.append(websocket)
         if len(self.waiting_queue) >= 2:
@@ -27,8 +26,8 @@ class GameManager:
             "turn": "white",
             "board": self._get_initial_board(),
             "chain_piece": None,
-            "last_move_from": None, # Novo campo
-            "last_move_to": None     # Novo campo
+            "last_move_from": None,
+            "last_move_to": None
         }
         for s, c in [(p1, 'white'), (p2, 'black')]:
             try:
@@ -36,21 +35,46 @@ class GameManager:
                 await s.close()
             except: pass
 
-    # --- GAMEPLAY & ESTADO ---
+    # --- GERENCIAMENTO DE CONEXÃO ---
     async def connect_player(self, game_id: str, websocket: WebSocket, color: str):
         if game_id in self.active_games:
             self.active_games[game_id][f"{color}_ws"] = websocket
             await self.broadcast_game_state(game_id)
         else: await websocket.close(code=4000)
 
+    async def disconnect_player(self, game_id: str, color: str):
+        if game_id in self.active_games:
+            if f"{color}_ws" in self.active_games[game_id]:
+                self.active_games[game_id][f"{color}_ws"] = None
+
+    # --- NOVA FUNÇÃO: ENCAMINHAMENTO DE MENSAGENS (CHAT/VÍDEO) ---
+    async def forward_message(self, game_id: str, message: dict, sender_color: str):
+        """
+        Repassa mensagens genéricas (chat, webrtc signal) para o oponente.
+        """
+        game = self.active_games.get(game_id)
+        if not game: return
+        
+        # Define quem é o oponente
+        opponent_color = "black" if sender_color == "white" else "white"
+        ws = game.get(f"{opponent_color}_ws")
+        
+        # Envia a mensagem exatamente como chegou
+        if ws:
+            try:
+                await ws.send_json(message)
+            except:
+                pass
+
+    # --- GAMEPLAY & ESTADO ---
     async def send_individual_update(self, websocket: WebSocket, game: dict):
         msg = {
             "type": "update", 
             "board": game["board"], 
             "turn": game["turn"], 
             "chain_piece": game["chain_piece"],
-            "last_move_from": game["last_move_from"], # Incluído
-            "last_move_to": game["last_move_to"]       # Incluído
+            "last_move_from": game["last_move_from"],
+            "last_move_to": game["last_move_to"]
         }
         try: await websocket.send_json(msg)
         except: pass
@@ -99,7 +123,6 @@ class GameManager:
 
         self._apply_move_on_board(board, origin, target, is_capture)
         
-        # --- REGISTRAR O MOVIMENTO ---
         game["last_move_from"] = origin
         game["last_move_to"] = target
         
@@ -129,8 +152,8 @@ class GameManager:
             "board": game["board"], 
             "turn": game["turn"], 
             "chain_piece": game["chain_piece"],
-            "last_move_from": game["last_move_from"], # Incluído
-            "last_move_to": game["last_move_to"]       # Incluído
+            "last_move_from": game["last_move_from"],
+            "last_move_to": game["last_move_to"]
         }
         for c in ["white", "black"]:
             ws = game.get(f"{c}_ws")
@@ -138,12 +161,7 @@ class GameManager:
                 try: await ws.send_json(msg)
                 except: pass
 
-    async def disconnect_player(self, game_id: str, color: str):
-        if game_id in self.active_games:
-            if f"{color}_ws" in self.active_games[game_id]:
-                self.active_games[game_id][f"{color}_ws"] = None
-
-    # --- VERIFICAÇÃO DE VITÓRIA / EMPATE (Mantidas) ---
+    # --- VERIFICAÇÃO DE VITÓRIA / LÓGICA DE JOGO (Mantidas idênticas ao original) ---
     async def _check_win_conditions(self, board, current_player_color, opponent_color, game_id):
         opponent_pieces = sum(1 for row in board for piece in row if piece and piece['color'] == opponent_color)
         if opponent_pieces == 0:
@@ -198,7 +216,6 @@ class GameManager:
                 return True
         return False
 
-    # --- REGRAS DE MOVIMENTO E LÓGICA (Mantidas) ---
     def _validate_move_logic(self, game, o, t, color):
         board, chain_piece = game["board"], game["chain_piece"]
         if chain_piece and (o['r'] != chain_piece['r'] or o['c'] != chain_piece['c']): return False, False

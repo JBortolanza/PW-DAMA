@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routes import users, upload, chat
+from app.routes import users, upload, chat, matchmaking, game 
 
 app = FastAPI(
     title="PW API",
@@ -21,6 +21,8 @@ app.add_middleware(
 app.include_router(users.router, prefix="/api", tags=["users"])
 app.include_router(upload.router, prefix="/api", tags=["upload"])
 app.include_router(chat.router, prefix="/api", tags=["chat"])
+app.include_router(matchmaking.router, prefix="/api", tags=["matchmaking"])
+app.include_router(game.router, prefix="/api", tags=["game"])
 
 
 @app.get("/")

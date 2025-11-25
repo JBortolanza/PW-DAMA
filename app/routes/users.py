@@ -229,3 +229,40 @@ def get_me(current_user: dict = Depends(get_current_user)):
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail="Internal server error")
+
+@router.get("/ranking")
+def get_ranking():
+    """
+    Retorna os top 5 usuários com mais vitórias.
+    """
+    try:
+        # Busca usuários ordenados por vitórias (descendente), limitados a 5
+        # Projetamos apenas os campos necessários para segurança e performance
+        top_users_cursor = db["users"].find(
+            {}, 
+            {
+                "_id": 0,           # Não expor o ID interno
+                "name": 1, 
+                "avatar": 1, 
+                "wins": 1, 
+                "totalGames": 1
+            }
+        ).sort("wins", -1).limit(5)
+
+        ranking_list = list(top_users_cursor)
+        
+        # Garante que campos vazios tenham valores padrão
+        cleaned_ranking = []
+        for user in ranking_list:
+            cleaned_ranking.append({
+                "name": user.get("name", "Jogador"),
+                "avatar": user.get("avatar", "https://pw.jan.bortolanza.vms.ufsc.br/images/avatars/default/default_avatar.png"),
+                "wins": user.get("wins", 0),
+                "totalGames": user.get("totalGames", 0)
+            })
+
+        return cleaned_ranking
+
+    except Exception as e:
+        print(f"ERROR in /ranking: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error fetching ranking")

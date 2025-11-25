@@ -6,6 +6,7 @@ from app.models import UserCreate, UserLogin, LoginResponse, UserPublic, UserUpd
 from app.db import db
 from app.auth import hash_password, verify_password, create_access_token
 from app.auth import get_current_user
+from typing import List
 
 # Caminho onde os avatares serão salvos no servidor
 AVATAR_FOLDER = "/var/www/html/images/avatars/custom"
@@ -231,7 +232,7 @@ def get_me(current_user: dict = Depends(get_current_user)):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 @router.get("/ranking")
-def get_ranking():
+def get_ranking(current_user: dict = Depends(get_current_user)):
     """
     Retorna os top 5 usuários com mais vitórias.
     """

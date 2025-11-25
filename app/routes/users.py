@@ -248,7 +248,7 @@ def get_ranking(current_user: dict = Depends(get_current_user)):
                 "wins": 1, 
                 "totalGames": 1
             }
-        ).sort("wins", -1).limit(5)
+        ).sort("wins", -1).limit(10)
 
         ranking_list = list(top_users_cursor)
         

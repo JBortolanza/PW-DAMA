@@ -7,7 +7,6 @@ from app.db import db
 from bson import ObjectId
 from datetime import datetime
 
-# Configuração básica de logs
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -29,8 +28,6 @@ class GameManager:
 
     async def create_match(self, p1: WebSocket, p2: WebSocket):
         game_id = str(uuid.uuid4())
-        logger.info(f"Criando partida {game_id}")
-        
         self.active_games[game_id] = {
             "white_ws": None, "black_ws": None,
             "white_user_id": None, "black_user_id": None,
@@ -41,57 +38,44 @@ class GameManager:
             "chain_piece": None,
             "last_move_from": None,
             "last_move_to": None,
+            "last_sound": "start", # Novo campo para som
             "start_time": datetime.utcnow()
         }
-        
-        # Notifica jogadores
         for s, c in [(p1, 'white'), (p2, 'black')]:
             try:
                 await s.send_json({"type": "match_found", "game_id": game_id, "color": c})
-                await s.close() # Fecha socket de matchmaking para forçar reconexão no socket de jogo
-            except Exception as e:
-                logger.error(f"Erro ao notificar match: {e}")
+                await s.close()
+            except: pass
 
-    # --- CONEXÃO ---
     async def connect_player(self, game_id: str, websocket: WebSocket, color: str, player_data: dict):
-        if game_id not in self.active_games:
-            logger.warning(f"Tentativa de conexão em jogo inexistente: {game_id}")
-            await websocket.close(code=4000)
-            return
-
-        game = self.active_games[game_id]
-        game[f"{color}_ws"] = websocket
-        
-        if player_data:
-            game[f"{color}_user_id"] = player_data.get("id")
-            game[f"{color}_name"] = player_data.get("name", "Jogador")
-            game[f"{color}_email"] = player_data.get("email", "")
-
-        logger.info(f"Jogador {color} conectado em {game_id}")
-        await self.broadcast_game_state(game_id)
+        if game_id in self.active_games:
+            game = self.active_games[game_id]
+            game[f"{color}_ws"] = websocket
+            if player_data:
+                game[f"{color}_user_id"] = player_data.get("id")
+                game[f"{color}_name"] = player_data.get("name", "Jogador")
+                game[f"{color}_email"] = player_data.get("email", "")
+            await self.broadcast_game_state(game_id)
+        else: await websocket.close(code=4000)
 
     async def disconnect_player(self, game_id: str, color: str):
         if game_id in self.active_games:
-            logger.info(f"Jogador {color} desconectado de {game_id}")
             if f"{color}_ws" in self.active_games[game_id]:
                 self.active_games[game_id][f"{color}_ws"] = None
 
-    # --- CHAT ---
     async def forward_message(self, game_id: str, message: dict, sender_color: str):
         game = self.active_games.get(game_id)
         if not game: return
-        
         if message.get("type") == "chat":
             sender_name = game.get(f"{sender_color}_name", "Oponente")
             message["sender"] = sender_name
-        
         opponent_color = "black" if sender_color == "white" else "white"
         ws = game.get(f"{opponent_color}_ws")
         if ws:
             try: await ws.send_json(message)
-            except Exception as e: logger.error(f"Erro ao encaminhar mensagem: {e}")
+            except: pass
 
-    # --- ESTADO ---
+    # --- ESTADO DO JOGO (COM SOM) ---
     def _build_state_msg(self, game):
         return {
             "type": "update", 
@@ -100,17 +84,10 @@ class GameManager:
             "chain_piece": game["chain_piece"],
             "last_move_from": game["last_move_from"], 
             "last_move_to": game["last_move_to"],
+            "sound": game.get("last_sound", None), # Envia som para o frontend
             "players": {
-                "white": { 
-                    "name": game["white_name"], 
-                    "email": game.get("white_email", ""), 
-                    "id": game["white_user_id"] 
-                },
-                "black": { 
-                    "name": game["black_name"], 
-                    "email": game.get("black_email", ""), 
-                    "id": game["black_user_id"] 
-                }
+                "white": { "name": game["white_name"], "email": game.get("white_email", ""), "id": game["white_user_id"] },
+                "black": { "name": game["black_name"], "email": game.get("black_email", ""), "id": game["black_user_id"] }
             }
         }
 
@@ -122,11 +99,15 @@ class GameManager:
         game = self.active_games.get(game_id)
         if not game: return
         msg = self._build_state_msg(game)
+        
+        # Limpa o som após o envio para não repetir em reconexões
+        game["last_sound"] = None 
+        
         for c in ["white", "black"]:
             ws = game.get(f"{c}_ws")
             if ws: 
                 try: await ws.send_json(msg)
-                except Exception as e: logger.error(f"Erro broadcast: {e}")
+                except: pass
 
     # --- FINALIZAÇÃO ---
     async def player_surrender(self, game_id: str, loser_color: str):
@@ -138,19 +119,13 @@ class GameManager:
     async def broadcast_game_over(self, game_id: str, winner: str, reason: str):
         game = self.active_games.get(game_id)
         if not game: return
-        
         self._update_player_stats(game, winner)
-
         msg = {"type": "game_over", "winner": winner, "reason": reason}
-        
         for c in ["white", "black"]:
             ws = game.get(f"{c}_ws")
             if ws: 
-                try: 
-                    await ws.send_json(msg)
-                    await ws.close()
+                try: await ws.send_json(msg); await ws.close()
                 except: pass
-        
         if game_id in self.active_games:
             del self.active_games[game_id]
 
@@ -159,10 +134,7 @@ class GameManager:
             white_id = game.get("white_user_id")
             black_id = game.get("black_user_id")
             if not white_id or not black_id or len(str(white_id)) < 10: return
-            
-            white_oid = ObjectId(white_id)
-            black_oid = ObjectId(black_id)
-            
+            white_oid, black_oid = ObjectId(white_id), ObjectId(black_id)
             if winner_color == "white":
                 db["users"].update_one({"_id": white_oid}, {"$inc": {"wins": 1, "totalGames": 1}})
                 db["users"].update_one({"_id": black_oid}, {"$inc": {"losses": 1, "totalGames": 1}})
@@ -174,7 +146,7 @@ class GameManager:
                 db["users"].update_one({"_id": black_oid}, {"$inc": {"draws": 1, "totalGames": 1}})
         except Exception as e: logger.error(f"Stats error: {e}")
 
-    # --- PROCESSAMENTO DE MOVIMENTO (COM TRY/EXCEPT) ---
+    # --- PROCESSAMENTO DE MOVIMENTO ---
     async def process_move(self, game_id: str, move_data: dict, player_color: str):
         try:
             game = self.active_games.get(game_id)
@@ -185,9 +157,7 @@ class GameManager:
                 if ws: await self.send_individual_update(ws, game)
                 return
 
-            if game["turn"] != player_color: 
-                logger.warning(f"Movimento rejeitado: turno errado ({player_color})")
-                return 
+            if game["turn"] != player_color: return 
 
             origin, target = move_data["from"], move_data["to"]
             board = game["board"]
@@ -195,13 +165,18 @@ class GameManager:
             is_valid, is_capture = self._validate_move_logic(game, origin, target, player_color)
             
             if not is_valid:
-                logger.warning(f"Movimento inválido de {player_color}")
-                # Envia estado atual para corrigir o cliente (rollback visual)
                 await self.broadcast_game_state(game_id)
                 return
 
-            self._apply_move_on_board(board, origin, target, is_capture)
+            # Aplica movimento e verifica promoção
+            is_promotion = self._apply_move_on_board(board, origin, target, is_capture)
             
+            # Define som baseado no evento
+            sound_event = "move"
+            if is_promotion: sound_event = "promote" # Promoção tem prioridade de som visual
+            elif is_capture: sound_event = "capture"
+            
+            game["last_sound"] = sound_event # Salva para o broadcast
             game["last_move_from"] = origin
             game["last_move_to"] = target
             game["chain_piece"] = None 
@@ -221,12 +196,11 @@ class GameManager:
             await self.broadcast_game_state(game_id)
             
         except Exception as e:
-            logger.error(f"Erro processando movimento: {e}")
-            # Tenta recuperar o estado para não travar
+            logger.error(f"Erro move: {e}")
             await self.broadcast_game_state(game_id)
 
-    # --- REGRAS DE MOVIMENTO (DAMA VOADORA) ---
-    
+    # --- REGRAS DO JOGO (CORRIGIDAS) ---
+
     def _is_path_clear(self, board, r1, c1, r2, c2):
         dr = 1 if r2 > r1 else -1
         dc = 1 if c2 > c1 else -1
@@ -238,69 +212,57 @@ class GameManager:
         return True
 
     def _validate_move_logic(self, game, o, t, color):
-        try:
-            board, chain_piece = game["board"], game["chain_piece"]
-            
-            # Validações básicas de índices
-            if not (0 <= t['r'] < 8 and 0 <= t['c'] < 8) or board[t['r']][t['c']]: return False, False
-            piece = board[o['r']][o['c']]
-            if not piece or piece['color'] != color: return False, False
-            
-            # Se houver chain piece, a origem DEVE ser ela
-            if chain_piece and (o['r'] != chain_piece['r'] or o['c'] != chain_piece['c']): return False, False
+        board, chain_piece = game["board"], game["chain_piece"]
+        
+        if not (0 <= t['r'] < 8 and 0 <= t['c'] < 8) or board[t['r']][t['c']]: return False, False
+        piece = board[o['r']][o['c']]
+        if not piece or piece['color'] != color: return False, False
+        if chain_piece and (o['r'] != chain_piece['r'] or o['c'] != chain_piece['c']): return False, False
 
-            row_diff = t['r'] - o['r']
-            col_diff = t['c'] - o['c']
-            if abs(row_diff) != abs(col_diff): return False, False
+        row_diff = t['r'] - o['r']
+        col_diff = t['c'] - o['c']
+        if abs(row_diff) != abs(col_diff): return False, False
 
-            is_king = piece.get('king', False)
-            forward = -1 if color == 'white' else 1
+        is_king = piece.get('king', False)
+        forward = -1 if color == 'white' else 1
 
-            has_capture_available = self._has_any_capture(board, color)
+        has_capture_available = self._has_any_capture(board, color)
 
-            # MOVIMENTO SIMPLES
-            if not has_capture_available and not chain_piece:
-                if is_king:
-                    if self._is_path_clear(board, o['r'], o['c'], t['r'], t['c']): return True, False
-                else:
-                    if abs(row_diff) == 1 and row_diff == forward: return True, False
-                return False, False
-
-            # MOVIMENTO DE CAPTURA
-            # Simplificação: Captura com salto de 2 casas (para peças e damas em curta distância)
-            # Para suporte completo a dama voadora capturando à distância, a lógica seria:
-            # Verificar se no caminho existe APENAS UMA peça inimiga e se o destino é livre.
-            
-            # Vamos manter a lógica robusta de captura próxima por enquanto para evitar bugs de travamento
-            if abs(row_diff) >= 2:
-                # Verifica caminho
-                dr = 1 if row_diff > 0 else -1
-                dc = 1 if col_diff > 0 else -1
-                
-                r, c = o['r'] + dr, o['c'] + dc
-                enemy_found = False
-                
-                while r != t['r']:
-                    p = board[r][c]
-                    if p:
-                        if p['color'] == color: return False, False # Bloqueado por amiga
-                        if enemy_found: return False, False # Já pulou uma inimiga, não pode pular duas
-                        enemy_found = True
-                    r += dr
-                    c += dc
-                
-                if enemy_found: return True, True
-
+        # MOVIMENTO SIMPLES
+        if not has_capture_available and not chain_piece:
+            if is_king:
+                if self._is_path_clear(board, o['r'], o['c'], t['r'], t['c']): return True, False
+            else:
+                if abs(row_diff) == 1 and row_diff == forward: return True, False
             return False, False
-        except Exception as e:
-            logger.error(f"Erro validação lógica: {e}")
-            return False, False
+
+        # MOVIMENTO DE CAPTURA (DAMA VOADORA)
+        # Precisa percorrer o caminho, encontrar 1 inimigo e o resto vazio
+        if abs(row_diff) >= 2:
+            dr = 1 if row_diff > 0 else -1
+            dc = 1 if col_diff > 0 else -1
+            
+            r, c = o['r'] + dr, o['c'] + dc
+            enemy_found = False
+            
+            while r != t['r']:
+                p = board[r][c]
+                if p:
+                    if p['color'] == color: return False, False # Bloqueado por amiga
+                    if enemy_found: return False, False # Já pulou um inimigo
+                    enemy_found = True
+                r += dr
+                c += dc
+            
+            if enemy_found: return True, True
+
+        return False, False
 
     def _apply_move_on_board(self, board, o, t, is_capture):
         p = board[o['r']][o['c']]
+        promoted = False
         
         if is_capture:
-            # Remove a peça capturada entre a origem e o destino
             dr = 1 if t['r'] > o['r'] else -1
             dc = 1 if t['c'] > o['c'] else -1
             r, c = o['r'] + dr, o['c'] + dc
@@ -314,19 +276,47 @@ class GameManager:
         board[o['r']][o['c']] = None
         board[t['r']][t['c']] = p
         
-        if (p['color']=='white' and t['r']==0) or (p['color']=='black' and t['r']==7): p['king'] = True
+        if (p['color']=='white' and t['r']==0) or (p['color']=='black' and t['r']==7): 
+            if not p.get('king'): # Só marca promoção se não era rei antes
+                p['king'] = True
+                promoted = True
+                
+        return promoted
 
     def _can_capture_from(self, board, pos, color):
-        # Simplificado: Captura adjacente (pulo de 2)
-        # Para Dama Voadora completa, isso precisaria escanear as diagonais inteiras
         r, c = pos['r'], pos['c']
-        dirs = [(-2,-2),(-2,2),(2,-2),(2,2)]
-        for dr, dc in dirs:
-            tr, tc, mr, mc = r+dr, c+dc, r+dr//2, c+dc//2
-            if 0<=tr<8 and 0<=tc<8 and not board[tr][tc]:
-                mid = board[mr][mc]
-                if mid and mid['color']!=color: return True
-        return False
+        piece = board[r][c]
+        if not piece: return False
+        
+        directions = [(-1, -1), (-1, 1), (1, -1), (1, 1)]
+        
+        if piece.get('king'):
+            # DAMA VOADORA: Varre as diagonais
+            for dr, dc in directions:
+                ir, ic = r + dr, c + dc
+                while 0 <= ir < 8 and 0 <= ic < 8:
+                    target = board[ir][ic]
+                    if target:
+                        # Se achou peça inimiga
+                        if target['color'] != color:
+                            # Verifica se a casa APÓS a inimiga está vazia
+                            jr, jc = ir + dr, ic + dc
+                            if 0 <= jr < 8 and 0 <= jc < 8 and not board[jr][jc]:
+                                return True
+                        # Se achou qualquer peça (amiga ou inimiga), para de olhar nesta direção
+                        break
+                    ir += dr
+                    ic += dc
+            return False
+        else:
+            # PEÇA COMUM: Captura adjacente (distância 2)
+            for dr, dc in directions:
+                tr, tc = r + dr*2, c + dc*2
+                mr, mc = r + dr, c + dc
+                if 0 <= tr < 8 and 0 <= tc < 8 and not board[tr][tc]:
+                    mid = board[mr][mc]
+                    if mid and mid['color'] != color: return True
+            return False
 
     def _has_any_capture(self, board, color):
         for r in range(8):

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro - Damas Online</title>
+    <link rel="icon" href="images/favicon.png" type="image/png">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- CSS Personalizado -->
+    <link rel="stylesheet" href="CSS/register.css">
+</head>
+<body>
+    <div class="background-overlay"></div>
+    
+    <div class="container-fluid">
+        <div class="row justify-content-center align-items-center min-vh-100">
+            <div class="col-md-6 col-lg-4">
+                <div class="login-card">
+                    <div class="card-header text-center">
+                        <h2 class="logo">Damas Online</h2>
+                        <p class="welcome-text">Crie sua conta</p>
+                    </div>
+                    <div class="card-body">
+                        <form id="registerForm">
+                            <div class="mb-3">
+                                <label for="name" class="form-label">Nome completo</label>
+                                <input type="text" class="form-control" id="name" placeholder="Seu nome completo" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="email" class="form-label">E-mail</label>
+                                <input type="email" class="form-control" id="email" placeholder="seu@email.com" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Senha</label>
+                                <input type="password" class="form-control" id="password" placeholder="Sua senha" required>
+                                <div class="form-text">Mínimo de 6 caracteres</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="confirmPassword" class="form-label">Confirmar senha</label>
+                                <input type="password" class="form-control" id="confirmPassword" placeholder="Digite novamente sua senha" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100" id="registerBtn">
+                                <span class="btn-text">Criar conta</span>
+                                <div class="spinner-border spinner-border-sm d-none" role="status">
+                                    <span class="visually-hidden">Carregando...</span>
+                                </div>
+                            </button>
+                        </form>
+                        <div id="alertContainer"></div>
+                        <hr>
+                        <div class="text-center">
+                            <p class="mb-0">Já tem uma conta? <a href="login.html" class="text-decoration-none">Faça login</a></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- JavaScript personalizado -->
+    <script src="JS/auth.js"></script>
+    <script src="JS/register.js"></script>
+</body>
+</html>

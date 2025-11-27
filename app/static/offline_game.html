@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Damas Offline - vs CPU</title>
+    <link rel="icon" href="images/favicon.png" type="image/png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="CSS/offline.css">
+</head>
+<body>
+    <div class="background-overlay"></div>
+
+    <!-- NAVBAR -->
+    <nav class="game-nav fixed-top">
+        <a class="btn-icon" href="index.html" title="Voltar ao Menu Principal" onclick="playClickSound()">
+            <i class="bi bi-house-door-fill"></i>
+        </a>
+
+        <div class="d-flex align-items-center gap-3">
+            <div class="player-badge">
+                <span class="me-2 d-none d-sm-inline">Você</span>
+                <div class="avatar-indicator white"></div>
+            </div>
+            <div class="vs-badge">VS</div>
+            <div class="player-badge">
+                <div class="avatar-indicator black"></div>
+                <span class="ms-2 d-none d-sm-inline">CPU</span>
+            </div>
+        </div>
+
+        <button onclick="restartGame(); playClickSound()" class="btn btn-sm btn-warning rounded-pill px-3 fw-bold shadow-sm d-flex align-items-center gap-2" title="Reiniciar Partida">
+            <i class="bi bi-arrow-clockwise"></i> <span class="d-none d-sm-inline">Reiniciar</span>
+        </button>
+    </nav>
+
+    <!-- ÁREA DE JOGO -->
+    <div class="main-container">
+        <div class="game-layout">
+            
+            <!-- Coluna Esquerda: Tabuleiro -->
+            <div class="board-section">
+                <div class="board-wrapper">
+                    <div id="board" class="board"></div>
+                </div>
+                <div class="turn-badge mt-3" id="gameTurnText">Sua Vez</div>
+            </div>
+
+            <!-- Coluna Direita: Controles -->
+            <div class="controls-section">
+                <div class="glass-panel">
+                    <h6 class="text-muted fw-bold mb-3 text-uppercase small"><i class="bi bi-speedometer2 me-2"></i>Dificuldade</h6>
+                    <div class="difficulty-buttons">
+                        <button class="btn btn-difficulty easy" onclick="setDifficulty('easy'); playClickSound()">
+                            <i class="bi bi-emoji-smile"></i> Fácil
+                        </button>
+                        <button class="btn btn-difficulty medium active" onclick="setDifficulty('medium'); playClickSound()">
+                            <i class="bi bi-emoji-neutral"></i> Médio
+                        </button>
+                        <button class="btn btn-difficulty hard" onclick="setDifficulty('hard'); playClickSound()">
+                            <i class="bi bi-emoji-dizzy"></i> Difícil
+                        </button>
+                    </div>
+                </div>
+
+                <div class="glass-panel mt-3">
+                    <h6 class="text-muted fw-bold mb-2 text-uppercase small"><i class="bi bi-info-circle me-2"></i>Status</h6>
+                    <div class="d-flex justify-content-between small text-muted">
+                        <span>Peças Brancas:</span> <span id="whiteCount" class="fw-bold text-dark">12</span>
+                    </div>
+                    <div class="d-flex justify-content-between small text-muted">
+                        <span>Peças Pretas:</span> <span id="blackCount" class="fw-bold text-dark">12</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Modal Game Over -->
+    <div class="modal fade" id="gameOverModal" data-bs-backdrop="static" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="background: #F9F6F0; border-radius: 16px; border: none;">
+                <div class="modal-body text-center p-4">
+                    <div class="mb-3"><i class="bi bi-trophy-fill fs-1 text-warning"></i></div>
+                    <h2 id="gameOverTitle" class="fw-bold mb-2" style="color: #3E2723;">Fim de Jogo</h2>
+                    <p id="gameOverMessage" class="text-muted mb-4">...</p>
+                    <div class="d-flex gap-2 justify-content-center">
+                        <button onclick="restartGame(); playClickSound()" class="btn btn-primary rounded-pill px-4 fw-bold" style="background: #E65100; border: none;">Jogar Novamente</button>
+                        <a href="index.html" class="btn btn-outline-secondary rounded-pill px-4 fw-bold" onclick="playClickSound()">Sair</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="JS/offline_game.js"></script>
+</body>
+</html>

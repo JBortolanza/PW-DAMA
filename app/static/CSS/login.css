@@ -1,0 +1,202 @@
+/* =========================================
+   VARIÁVEIS & TEMA (Mesmo do index/profile)
+   ========================================= */
+:root {
+    --primary-dark: #3E2723;    /* Café Escuro */
+    --primary-light: #5D4037;   /* Marrom Madeira */
+    --accent: #D4A373;          /* Bege Dourado */
+    --action-color: #E65100;    /* Laranja Ação */
+    
+    --card-bg-warm: #F9F6F0;    /* Bege Creme Suave */
+    --bg-inner-warm: #F2EDE4;   /* Bege contraste */
+    
+    --text-main: #212121;
+    --text-muted: #757575;
+    
+    --radius: 16px;
+    --shadow-md: 0 10px 30px rgba(0,0,0,0.15);
+    --shadow-lg: 0 20px 50px rgba(0,0,0,0.3);
+}
+
+body, html {
+    height: 100%;
+    margin: 0;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* Fundo Gradiente Premium */
+body {
+    background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-light) 100%);
+    color: var(--text-main);
+    display: flex;
+    align-items: center; /* Centraliza Verticalmente */
+    justify-content: center; /* Centraliza Horizontalmente */
+    min-height: 100vh; /* Garante altura total da viewport */
+    padding: 15px; /* Evita que o card cole nas bordas em telas pequenas */
+}
+
+.background-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    z-index: -1;
+}
+
+/* Card de Login */
+.login-card {
+    background-color: var(--card-bg-warm);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.2);
+    width: 100%;
+    max-width: 400px; /* Largura ideal para login */
+    margin: 0 auto; /* Centraliza horizontalmente se não for flex item direto */
+    transition: transform 0.3s ease;
+}
+
+.login-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 25px 60px rgba(0,0,0,0.4);
+}
+
+/* Header do Card */
+.card-header {
+    background: rgba(249, 246, 240, 0.95);
+    padding: 2rem 1.5rem 1.5rem;
+    text-align: center;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+.logo {
+    font-weight: 800;
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(to right, var(--primary-dark), var(--action-color));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: none; /* Remove sombra antiga */
+}
+
+.welcome-text {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    font-weight: 500;
+    margin: 0;
+    letter-spacing: 0.5px;
+    text-shadow: none;
+}
+
+/* Corpo do Card */
+.card-body {
+    padding: 2rem;
+    background-color: var(--bg-inner-warm); /* Fundo interno levemente diferente */
+}
+
+/* Inputs */
+.form-label {
+    color: var(--primary-dark);
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.form-control {
+    background-color: white;
+    border: 1px solid rgba(0,0,0,0.1);
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    color: var(--text-main);
+    transition: all 0.2s;
+}
+
+.form-control:focus {
+    background-color: white;
+    border-color: var(--action-color);
+    box-shadow: 0 0 0 3px rgba(230, 81, 0, 0.1);
+}
+
+.form-control::placeholder {
+    color: #aaa;
+}
+
+/* Botão Principal */
+.btn-primary {
+    background-color: var(--primary-dark);
+    border: none;
+    border-radius: 10px;
+    padding: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 0.9rem;
+    margin-top: 1rem;
+    transition: all 0.2s;
+    color: white; /* Garante contraste */
+}
+
+.btn-primary:hover:not(:disabled) {
+    background-color: var(--action-color);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(230, 81, 0, 0.3);
+}
+
+.btn-primary:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Links e Texto */
+a {
+    color: var(--primary-light);
+    font-weight: 600;
+    transition: color 0.2s;
+}
+
+a:hover {
+    color: var(--action-color);
+    text-decoration: none;
+}
+
+hr {
+    border-top: 1px solid rgba(0,0,0,0.1);
+    margin: 1.5rem 0;
+}
+
+.text-muted {
+    color: var(--text-muted) !important;
+}
+
+/* Alertas */
+.alert {
+    border-radius: 10px;
+    font-size: 0.9rem;
+    padding: 0.8rem;
+    margin-top: 1rem;
+    border: none;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.alert-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+/* Responsividade */
+@media (max-width: 576px) {
+    .login-card {
+        margin: 0; /* Em telas muito pequenas, a margem do body cuida do espaço */
+        border-radius: 12px;
+        max-width: 100%; 
+    }
+    
+    .card-header { padding: 1.5rem; }
+    .card-body { padding: 1.5rem; }
+    
+    .logo { font-size: 1.8rem; }
+}

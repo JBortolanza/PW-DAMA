@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jogando - Damas Online</title>
+    <link rel="icon" href="images/favicon.png" type="image/png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="CSS/style.css">
+    <link rel="stylesheet" href="CSS/game.css">
+</head>
+<body>
+    <div class="background-overlay"></div>
+
+    <!-- NAVBAR POLIDA -->
+    <nav class="navbar navbar-expand-lg fixed-top game-nav">
+        <div class="container-fluid px-4">
+            
+            <!-- Logo Esquerda (Oculta botão voltar) -->
+            <div class="navbar-brand text-primary-custom fw-bold d-none d-md-block">
+                <i class="bi bi-grid-3x3-gap-fill me-2"></i>
+            </div>
+
+            <!-- INFO CENTRAL -->
+            <div class="d-flex align-items-center justify-content-center gap-3 mx-auto flex-grow-1">
+                
+                <!-- Jogador (Eu) -->
+                <div class="player-badge d-flex align-items-center gap-2 text-end">
+                    <span id="myNavName" class="fw-bold text-primary-dark d-none d-sm-block">Eu</span>
+                    <div id="myNavColor" class="avatar-indicator shadow-sm"></div>
+                </div>
+
+                <!-- VS Badge -->
+                <div class="vs-badge px-2 py-1 rounded-3 shadow-sm">VS</div>
+
+                <!-- Oponente -->
+                <div class="player-badge d-flex align-items-center gap-2">
+                    <div id="opNavColor" class="avatar-indicator shadow-sm"></div>
+                    <span id="opponentNameDisplay" class="fw-bold text-primary-dark d-none d-sm-block">Aguardando...</span>
+                </div>
+
+                <!-- Status -->
+                <div class="d-flex flex-column ms-2">
+                    <span id="statusText" class="badge bg-warning text-dark shadow-sm" style="font-size: 0.6rem;">...</span>
+                    <div id="recordingIndicator" class="d-none align-items-center justify-content-center gap-1 text-danger animate-pulse mt-1">
+                        <i class="bi bi-circle-fill" style="font-size: 0.5rem;"></i> <span style="font-size: 0.6rem; font-weight: 800;">REC</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botão Direita (Desistir) -->
+            <button id="btnSurrender" class="btn btn-sm btn-danger rounded-pill px-4 fw-bold shadow-sm d-flex align-items-center gap-2 transition-hover">
+                <i class="bi bi-flag-fill"></i> <span class="d-none d-sm-inline">Desistir</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- LAYOUT PRINCIPAL -->
+    <div class="main-container">
+        <div class="game-column">
+            <div class="board-wrapper p-3 mb-3 shadow-lg">
+                <div id="board" class="board"></div>
+            </div>
+            <div class="glass-badge px-4 py-2 rounded-pill shadow-sm bg-white border">
+                <span id="gameTurnText" class="fw-bold text-muted text-uppercase small">Aguardando...</span>
+            </div>
+        </div>
+
+        <div class="sidebar-column">
+            <div class="sidebar-card shadow-lg">
+                <div class="video-section">
+                    <video id="remoteVideo" autoplay playsinline class="w-100 h-100 object-fit-cover"></video>
+                    <div class="pip-wrapper">
+                        <video id="localVideo" autoplay playsinline muted class="pip-video"></video>
+                    </div>
+                    <div class="position-absolute bottom-0 start-0 w-100 p-2 d-flex justify-content-center gap-2" style="z-index: 25; background: linear-gradient(to top, rgba(0,0,0,0.6), transparent);">
+                        <button id="btnToggleVideo" class="btn btn-sm btn-light rounded-circle shadow-sm"><i class="bi bi-camera-video-fill"></i></button>
+                        <button id="btnToggleAudio" class="btn btn-sm btn-light rounded-circle shadow-sm"><i class="bi bi-mic-fill"></i></button>
+                    </div>
+                </div>
+                <ul class="nav nav-tabs nav-fill custom-tabs" id="chatTabs" role="tablist">
+                    <li class="nav-item"><button class="nav-link active py-3" id="match-tab" data-bs-toggle="tab" data-bs-target="#match-chat-pane">Partida</button></li>
+                    <li class="nav-item"><button class="nav-link py-3" id="global-tab" data-bs-toggle="tab" data-bs-target="#global-chat-pane">Global</button></li>
+                </ul>
+                <div class="chat-content-area tab-content">
+                    <div class="tab-pane fade show active chat-pane" id="match-chat-pane">
+                        <div id="matchMessages" class="chat-messages">
+                            <div class="chat-msg system"><small>Boa sorte!</small></div>
+                        </div>
+                        <div class="chat-input-wrapper">
+                            <form id="matchChatForm" class="d-flex gap-2">
+                                <input type="text" id="matchInput" class="form-control rounded-pill bg-light border-0" placeholder="Mensagem..." autocomplete="off">
+                                <button type="submit" class="btn btn-primary-custom rounded-circle btn-send text-white shadow-sm"><i class="bi bi-send-fill"></i></button>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade chat-pane" id="global-chat-pane">
+                        <div id="globalMessages" class="chat-messages">
+                            <div class="chat-msg system"><small>Chat Global.</small></div>
+                        </div>
+                        <div class="chat-input-wrapper">
+                            <form id="globalChatForm" class="d-flex gap-2">
+                                <input type="text" id="globalInput" class="form-control rounded-pill bg-light border-0" placeholder="Global..." autocomplete="off">
+                                <button type="submit" class="btn btn-primary-custom rounded-circle btn-send text-white shadow-sm"><i class="bi bi-send-fill"></i></button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="startGameModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content glass-card border-0 p-4 text-center" style="background: #F9F6F0;">
+                <div class="mb-3 text-primary-custom"><i class="bi bi-camera-reels-fill fs-1"></i></div>
+                <h3 class="fw-bold text-primary-custom mb-3">Gravação</h3>
+                <p class="text-muted mb-4">Habilite a gravação de tela para ter acesso aos replays.</p>
+                <button id="btnStartGame" class="btn btn-primary-custom rounded-pill w-100 py-2 fw-bold shadow-sm text-uppercase">Iniciar Partida</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="gameOverModal" data-bs-backdrop="static" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content glass-card border-0 p-4 text-center" style="background: #F9F6F0;">
+                <div class="mb-3"><i class="bi bi-trophy-fill fs-1 text-warning"></i></div>
+                <h2 id="gameOverTitle" class="fw-bold text-primary-custom mb-3">Fim</h2>
+                <p id="gameOverMessage" class="text-muted mb-4">...</p>
+                <p id="uploadStatus" class="text-info small d-none"><i class="bi bi-cloud-arrow-up"></i> Salvando...</p>
+                <button onclick="window.location.href='index.html'" class="btn btn-primary-custom rounded-pill w-100 py-2 fw-bold shadow-sm">Menu</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="JS/auth.js"></script>
+    <script src="JS/screen-recorder.js"></script>
+    <script src="JS/game.js"></script>
+</body>
+</html>

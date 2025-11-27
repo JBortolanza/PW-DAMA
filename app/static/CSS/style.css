@@ -1,0 +1,366 @@
+:root {
+    /* Paleta de Cores Premium (Café/Madeira/Creme) */
+    --primary-dark: #3E2723;    /* Café Escuro */
+    --primary-light: #5D4037;   /* Marrom Madeira */
+    --accent: #D4A373;          /* Bege Dourado */
+    --action-color: #E65100;    /* Laranja Ação */
+    
+    --bg-gradient-start: #3E2723;
+    --bg-gradient-end: #5D4037;
+    
+    /* NOVAS CORES DE FUNDO (Substituindo o branco) */
+    --card-bg-warm: #F9F6F0;    /* Bege Creme Suave (Principal) */
+    --bg-inner-warm: #F2EDE4;   /* Bege um pouco mais escuro para contraste interno */
+    
+    --text-main: #212121;
+    --text-muted: #757575;
+    
+    --radius: 16px;
+    --shadow-sm: 0 4px 6px rgba(0,0,0,0.05);
+    --shadow-md: 0 10px 30px rgba(0,0,0,0.15);
+    --shadow-hover: 0 15px 35px rgba(0,0,0,0.2);
+}
+
+body, html {
+    height: 100%;
+    margin: 0;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+body {
+    background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+    color: var(--text-main);
+    display: flex;
+    flex-direction: column;
+}
+
+.background-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    z-index: -1;
+}
+
+/* --- COMPONENTES GERAIS --- */
+.text-primary-custom { color: var(--primary-dark) !important; }
+.text-gradient {
+    background: linear-gradient(to right, var(--primary-dark), var(--action-color));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+
+/* Card Base (Usando o novo bege) */
+.glass-card {
+    background: var(--card-bg-warm);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    /* Borda sutil para definição */
+    border: 1px solid rgba(255,255,255,0.5);
+    overflow: hidden;
+}
+
+/* --- NAVBAR --- */
+.navbar {
+    /* Fundo bege com leve transparência */
+    background: rgba(249, 246, 240, 0.95);
+    backdrop-filter: blur(10px);
+    box-shadow: var(--shadow-sm);
+    height: 80px;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(255,255,255,0.3);
+}
+
+.btn-icon {
+    width: 45px; height: 45px;
+    border-radius: 12px;
+    background: var(--bg-inner-warm); /* Fundo do ícone mais escuro */
+    border: 1px solid rgba(0,0,0,0.05);
+    color: var(--primary-light);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.btn-icon:hover {
+    background: var(--primary-light);
+    color: var(--card-bg-warm);
+    transform: translateY(-2px);
+}
+
+.nav-avatar {
+    width: 50px; height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--card-bg-warm);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    transition: transform 0.2s;
+    cursor: pointer;
+}
+
+.nav-avatar:hover {
+    transform: scale(1.1);
+    border-color: var(--action-color);
+}
+
+.profile-link { text-decoration: none; }
+
+/* --- MAIN CONTENT --- */
+.main-content {
+    margin-top: 100px;
+    flex: 1;
+    padding-bottom: 2rem;
+}
+
+/* Chat */
+.chat-container {
+    height: 500px; /* Altura fixa para o chat */
+    max-height: 60vh;
+    margin-bottom: 1.5rem; /* Espaço abaixo do chat */
+}
+
+.chat-header {
+    background: var(--card-bg-warm);
+    border-bottom: 1px solid rgba(0,0,0,0.05) !important;
+}
+
+.chat-messages {
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    /* Fundo interno do chat um pouco mais escuro para profundidade */
+    background-color: var(--bg-inner-warm);
+}
+
+.chat-messages::-webkit-scrollbar { width: 6px; }
+.chat-messages::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+
+.message {
+    padding: 8px 12px;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    max-width: 85%;
+    line-height: 1.4;
+}
+
+.message.system {
+    background-color: #e3f2fd; color: #0d47a1;
+    align-self: center; text-align: center;
+    font-size: 0.8rem; border-radius: 20px; padding: 4px 15px;
+    box-shadow: var(--shadow-sm);
+}
+
+.message.user {
+    /* Balão do usuário agora é da cor do card principal */
+    background-color: var(--card-bg-warm);
+    color: var(--primary-dark);
+    align-self: flex-start;
+    border-bottom-left-radius: 0;
+    border: 1px solid rgba(0,0,0,0.05);
+    box-shadow: var(--shadow-sm);
+}
+
+.message.me {
+    background-color: var(--primary-dark);
+    color: var(--card-bg-warm);
+    align-self: flex-end;
+    border-bottom-right-radius: 0;
+    box-shadow: var(--shadow-sm);
+}
+
+.chat-input-area {
+    background: var(--card-bg-warm);
+    border-top: 1px solid rgba(0,0,0,0.05) !important;
+}
+
+.chat-input-area .form-control {
+    background-color: var(--bg-inner-warm);
+    border: 1px solid rgba(0,0,0,0.05);
+}
+.chat-input-area .form-control:focus {
+    background-color: var(--card-bg-warm);
+    border-color: var(--accent);
+    box-shadow: none;
+}
+
+.btn-primary-custom {
+    background-color: var(--primary-dark); color: var(--card-bg-warm); border: none;
+    transition: all 0.2s;
+}
+.btn-primary-custom:hover { background-color: var(--action-color); color: white; }
+
+/* Rules Box - Abaixo do Chat */
+.rules-box-container {
+    margin-top: 1rem;
+}
+
+.rules-box-container .glass-card {
+    padding: 1.5rem;
+    height: 100%; /* Ocupa altura completa se necessário */
+}
+
+.rules-box-container h5 {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    border-bottom: 2px solid var(--accent);
+    padding-bottom: 0.5rem;
+    display: inline-block;
+}
+
+.rules-box-container ul {
+    padding-left: 1.2rem;
+    margin-bottom: 0;
+}
+
+.rules-box-container li {
+    margin-bottom: 0.5rem;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+
+/* Game Options */
+.hero-banner {
+    /* Gradiente sutil de bege */
+    background: linear-gradient(to right, var(--card-bg-warm), #FFFDF9);
+    border-left: 5px solid var(--action-color);
+}
+
+.game-option-card {
+    background: var(--card-bg-warm); /* Fundo bege */
+    border-radius: var(--radius);
+    padding: 2rem;
+    box-shadow: var(--shadow-md);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.5);
+}
+
+.game-option-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-hover);
+    border-color: var(--accent);
+    background: #FFFDF9; /* Fica ligeiramente mais claro no hover */
+}
+
+.icon-wrapper {
+    width: 64px; height: 64px;
+    border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 1rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.bg-gradient-orange { background: linear-gradient(135deg, #FF9800, #F57C00); }
+.bg-gradient-brown { background: linear-gradient(135deg, #795548, #5D4037); }
+
+.game-option-card h3 { font-weight: 700; color: var(--primary-dark); font-size: 1.25rem; margin-bottom: 0.5rem; }
+.game-option-card p { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1.5rem; }
+
+.btn-outline-primary {
+    color: var(--primary-dark); border-color: var(--primary-dark);
+}
+.btn-outline-primary:hover {
+    background-color: var(--primary-dark); color: var(--card-bg-warm); border-color: var(--primary-dark);
+}
+
+/* Rules Card */
+.rules-card { transition: background 0.2s; cursor: pointer; }
+.rules-card:hover { background-color: #FFFDF9; }
+
+.icon-small {
+    width: 48px; height: 48px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    background-color: var(--bg-inner-warm); /* Fundo do ícone mais escuro */
+}
+
+/* --- FOOTER --- */
+.glass-footer {
+    background-color: rgba(249, 246, 240, 0.9); /* Bege com transparência */
+    border-top: 1px solid rgba(255,255,255,0.3);
+    backdrop-filter: blur(5px);
+}
+
+.footer-link {
+    color: var(--primary-light);
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: color 0.2s;
+}
+
+.footer-link:hover {
+    color: var(--action-color);
+    text-decoration: underline;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .chat-container { height: 400px; margin-bottom: 1.5rem; } /* Ajustado margin-bottom */
+    .main-content { margin-top: 90px; }
+}
+
+/* --- RANKING --- */
+.bg-inner-warm {
+    background-color: var(--bg-inner-warm);
+}
+
+.ranking-list {
+    /* Ajuste para mostrar 5 itens (cada item ~60px) + margem: 5 * 60 = 300px */
+    max-height: 350px; /* 350px deve ser suficiente para 5 itens */
+    min-height: 300px; /* Mantém o espaço ocupado */
+    overflow-y: auto;
+}
+
+.ranking-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.8rem 1rem;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    transition: background 0.2s;
+}
+
+.ranking-item:last-child { border-bottom: none; }
+.ranking-item:hover { background-color: rgba(255,255,255,0.5); }
+
+.rank-pos {
+    width: 30px;
+    font-weight: 800;
+    color: var(--text-muted);
+    font-size: 1.1rem;
+}
+
+/* Cores dos troféus/posições */
+.rank-1 { color: #FFD700 !important; text-shadow: 0 1px 2px rgba(0,0,0,0.2); } /* Ouro */
+.rank-2 { color: #C0C0C0 !important; } /* Prata */
+.rank-3 { color: #CD7F32 !important; } /* Bronze */
+
+.rank-user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-grow: 1;
+}
+
+.rank-avatar {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid white;
+}
+
+.rank-points {
+    font-weight: 700;
+    color: var(--action-color);
+    font-size: 0.9rem;
+    background: rgba(230, 81, 0, 0.1);
+    padding: 2px 8px;
+    border-radius: 10px;
+}

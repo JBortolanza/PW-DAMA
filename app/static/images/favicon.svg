@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- Fundo do tabuleiro -->
+  <rect width="32" height="32" fill="#8B4513" rx="2"/>
+  
+  <!-- Padrão xadrez simplificado -->
+  <rect x="0" y="0" width="8" height="8" fill="#D2691E"/>
+  <rect x="16" y="0" width="8" height="8" fill="#D2691E"/>
+  <rect x="8" y="8" width="8" height="8" fill="#D2691E"/>
+  <rect x="24" y="8" width="8" height="8" fill="#D2691E"/>
+  <rect x="0" y="16" width="8" height="8" fill="#D2691E"/>
+  <rect x="16" y="16" width="8" height="8" fill="#D2691E"/>
+  <rect x="8" y="24" width="8" height="8" fill="#D2691E"/>
+  <rect x="24" y="24" width="8" height="8" fill="#D2691E"/>
+  
+  <!-- Peças de dama -->
+  <circle cx="6" cy="6" r="2.5" fill="#2F1B14" stroke="#FFF8DC" stroke-width="0.5"/>
+  <circle cx="26" cy="26" r="2.5" fill="#F4A460" stroke="#2F1B14" stroke-width="0.5"/>
+  
+  <!-- Coroa na peça clara (dama) -->
+  <path d="M24 24 L25 22 L26 23 L27 22 L28 24 L26 25 Z" fill="#FFD700" stroke="#2F1B14" stroke-width="0.3"/>
+</svg>

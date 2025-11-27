@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>Damas Online - Arquitetura e Desenvolvimento</title>
+
+    <!-- Reveal.js CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.0.4/reset.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.0.4/reveal.min.css">
+    <!-- Tema Claro (White) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.0.4/theme/white.min.css">
+
+    <!-- Highlight.js para código -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+
+    <!-- Estilos Customizados para combinar com o Jogo -->
+    <style>
+        :root {
+            --primary-dark: #3E2723;
+            --action-color: #E65100;
+            --bg-gradient: linear-gradient(135deg, #fdfbf7 0%, #e3dac9 100%);
+        }
+
+        /* Fundo dos Slides */
+        .reveal .slides section, .reveal .slides section > section {
+            line-height: 1.3;
+            color: #333;
+        }
+
+        body {
+            background: var(--bg-gradient);
+        }
+
+        /* Títulos */
+        .reveal h1, .reveal h2, .reveal h3, .reveal h4 {
+            color: var(--primary-dark);
+            font-family: 'Segoe UI', sans-serif;
+            text-transform: none;
+            font-weight: 700;
+        }
+
+        /* Links e Elementos de Destaque */
+        .reveal a { color: var(--action-color); }
+        .reveal strong { color: var(--action-color); }
+
+        /* Blocos de Código */
+        .reveal pre code {
+            background: #f4f4f4;
+            color: #333;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        /* Caixas de Destaque */
+        .feature-box {
+            background: rgba(255,255,255,0.8);
+            border: 2px solid var(--primary-dark);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        
+        .col-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        /* Animação para o diagrama */
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="reveal">
+        <div class="slides">
+
+            <!-- SLIDE 1: Título -->
+            <section>
+                <h1>Damas</h1>
+                <h3>Arquitetura Web e Demonstração prática</h3>
+                <p>
+                    <small>Desenvolvido por <a href="#">Jan Bortolanza e Marcelo</a></small>
+                </p>
+            </section>
+
+            <!-- SLIDE 2: Tecnologias -->
+            <section>
+                <h2>Stack Tecnológica</h2>
+                <div class="col-container">
+                    <div class="feature-box fragment fade-up">
+                        <h4>Backend</h4>
+                        <p>FastAPI (Python)</p>
+                        <p>MongoDB</p>
+                        <p>Apache</p>
+                        <p>Cloudflare R2</p>
+                    </div>
+                    <div class="feature-box fragment fade-up">
+                        <h4>Frontend</h4>
+                        <p>HTML5 / JS</p>
+                        <p>Bootstrap 5</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SLIDE 3: FastAPI & Real-time -->
+            <section>
+                <section>
+                    <h2>Backend: FastAPI</h2>
+                    <ul>
+                        <li class="fragment">Alta performance (Asynchronous).</li>
+                        <li class="fragment"><strong>REST</strong> - Gerenciamento de usuários e uploads.</li>
+                        <li class="fragment"><strong>WebSockets</strong> - Comunicação bidirecional para o jogo e chat.</li>
+                        <li class="fragment">Autenticação via JWT em Cookies.</li>
+                    </ul>
+                </section>
+                <section>
+                    <h3>Exemplo: Rota de Login</h3>
+                    <pre><code class="python" data-trim data-noescape>
+@router.post("/login")
+def login(user: UserLogin, response: Response):
+    # Validação no MongoDB
+    db_user = db["users"].find_one({"email": user.email})
+
+    if not db_user or not verify_password(...):
+        raise HTTPException(status_code=401, ...)
+
+    token = create_access_token({"sub": db_user["email"]})
+
+    # Define Cookie Seguro
+    response.set_cookie(
+        key="access_token",
+        value=token,
+        httponly=True,
+        secure=True
+    )
+                    </code></pre>
+                </section>
+            </section>
+
+            <!-- SLIDE 4: MongoDB (Melhorado) -->
+            <section>
+                <!-- 4.1: Visão Geral -->
+                <section>
+                    <h2>Backend: Persistência (MongoDB)</h2>
+                    <div style="display: flex; gap: 20px; margin-top: 30px;">
+                        <div class="feature-box fragment fade-up" style="flex: 1;">
+                            <h4>Vantagens do MongoDB?</h4>
+                            <ul style="font-size: 0.7em; text-align: left;">
+                                <li>Schema flexível (ajudou bastante durante o desenvolvimento).</li>
+                                <li>Compatibilidade com JSON.</li>
+                                <li>Integração nativa com Python (PyMongo).</li>
+                            </ul>
+                        </div>
+                        <div class="feature-box fragment fade-up" style="flex: 1;">
+                            <h4>Coleções</h4>
+                            <ul style="font-size: 0.7em; text-align: left;">
+                                <li><strong>users:</strong> Credenciais, stats (v/d/e), avatar.</li>
+                                <li><strong>recordings:</strong> Metadados dos vídeos e resultados.</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <br>
+                </section>
+
+                <!-- 4.2: Exemplo de Dados -->
+                <section>
+                    <h3>Modelagem de Dados</h3>
+                    <p style="font-size: 0.7em;">Exemplo de um documento de partida salva:</p>
+                    <pre><code class="json" data-trim data-noescape>
+{
+  "_id": ObjectId("65b2a..."),
+  "game_type": "checkers_match",
+  "duration": 185,
+  "file_key": "users/jan/game_1709.webm",
+  "public_url": "https://pub-de94...r2.dev/...",
+  
+  // Array de Jogadores (Embedded)
+  "players": [
+    {
+      "name": "Jan",
+      "role": "white",
+      "result": "win",
+      "email": "jan@example.com"
+    },
+    {
+      "name": "Oponente",
+      "role": "black",
+      "result": "loss"
+    }
+  ],
+  "created_at": ISODate("2025-11-27T14:00:00Z")
+}
+                    </code></pre>
+                </section>
+            </section>
+
+            <!-- SLIDE 5: Apache (Infraestrutura) -->
+            <section>
+                
+                <!-- 5.1: Explicação -->
+                <section>
+                    <h2>Infraestrutura: Apache</h2>
+                    <br>
+                    <div style="text-align: left; background: #f9f9f9; padding: 30px; border-radius: 15px; border-left: 5px solid var(--action-color); box-shadow: 0 5px 15px rgba(0,0,0,0.05);">
+                        <ul style="list-style-type: none; padding: 0; margin: 0;">
+                            <li class="fragment" style="margin-bottom: 20px;">
+                                🔒 <strong>Terminação SSL/TLS:</strong><br>
+                                <span style="font-size: 0.8em; color: #666;">Gerencia certificados e criptografia (HTTPS/WSS).</span>
+                            </li>
+                            <li class="fragment" style="margin-bottom: 20px;">
+                                🔀 <strong>Proxy Reverso:</strong><br>
+                                <span style="font-size: 0.8em; color: #666;">Oculta a porta interna do Python (8000) e roteia o tráfego.</span>
+                            </li>
+                            <li class="fragment">
+                                ⚡ <strong>Conteúdo Estático:</strong><br>
+                                <span style="font-size: 0.8em; color: #666;">Entrega HTML, CSS e JS diretamente ao navegador.</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <br>
+                </section>
+
+                <!-- 5.2: Diagrama -->
+                <section>
+                    <h3>Topologia do Servidor</h3>
+                    
+                    <div style="display: flex; align-items: center; justify-content: center; height: 500px; font-size: 0.9em; color: #333;">
+                        
+                        <!-- Cliente -->
+                        <div style="display: flex; flex-direction: column; align-items: center;">
+                            <span style="font-size: 3em;">💻</span>
+                            <strong>Cliente</strong>
+                            <small>(Browser)</small>
+                        </div>
+
+                        <!-- Seta 1 -->
+                        <div style="margin: 0 30px; text-align: center; color: var(--action-color);">
+                            <small>HTTPS / WSS</small><br>
+                            <span style="font-size: 2em;">⮕</span>
+                        </div>
+
+                        <!-- Apache -->
+                        <div style="background: #E65100; color: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 10px 30px rgba(230, 81, 0, 0.4); z-index: 2;">
+                            <span style="font-size: 2em;">🛡️</span><br>
+                            <strong style="color: #fff;">APACHE</strong><br>
+                            <small style="color: #eee;">Porta 443</small>
+                        </div>
+
+                        <!-- Bifurcação -->
+                        <div style="display: flex; flex-direction: column; justify-content: center; margin-left: 30px; gap: 60px; position: relative;">
+                            
+                            <!-- Rota Estática -->
+                            <div style="display: flex; align-items: center;" class="fragment fade-right">
+                                <span style="font-size: 2em; margin-right: 20px; color: #aaa;">⤴</span>
+                                <div style="border: 2px solid #333; padding: 15px; border-radius: 8px; background: #fff;">
+                                    📂 <strong>Frontend</strong><br>
+                                    <small>HTML / CSS / JS</small>
+                                </div>
+                            </div>
+
+                            <!-- Rota Dinâmica -->
+                            <div style="display: flex; align-items: center;" class="fragment fade-right">
+                                <span style="font-size: 2em; margin-right: 20px; color: var(--primary-dark);">⤵</span>
+                                <div style="background: var(--primary-dark); color: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.2);">
+                                    ⚙️ <strong>FastAPI</strong><br>
+                                    <small>Porta 8000 (Interna)</small>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </section>
+            </section>
+
+            <!-- SLIDE 6: Cloudflare R2 (Com Caixas) -->
+            <section>
+                <h2>Armazenamento: Cloudflare R2</h2>
+                <p>Utilizamos Object Storage para armazenar os replays.</p>
+                <br>
+                <div class="col-container">
+                    <div class="feature-box fragment">
+                        <h4>Custo</h4>
+                        <p style="font-size: 0.8em;">Sem taxas para armazenamento abaixo de 10GB e 1M de chamadas de API.</p>
+                    </div>
+                    <div class="feature-box fragment">
+                        <h4>Segurança e performance</h4>
+                        <p style="font-size: 0.8em;">Upload via <strong>URLs Assinadas</strong> (Presigned URLs). O Frontend envia direto para a nuvem, sem sobrecarregar o servidor.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SLIDE 7: Fluxo de Upload -->
+            <section>
+                <h3>Fluxo de Gravação e Upload</h3>
+                <ol style="font-size: 0.8em;">
+                    <li class="fragment">
+                        <strong>Captura:</strong> API <code>getDisplayMedia</code> grava a tela e o áudio no navegador.
+                    </li>
+                    <li class="fragment">
+                        <strong>Processamento:</strong> Ao fim do jogo, gera-se um arquivo <code>Blob</code> (WebM).
+                    </li>
+                    <li class="fragment">
+                        <strong>Autorização:</strong> Backend gera uma URL temporária de upload (PUT).
+                        <pre><code class="python">s3_client.generate_presigned_url('put_object', ...)</code></pre>
+                    </li>
+                    <li class="fragment">
+                        <strong>Envio:</strong> Frontend envia o vídeo <em>diretamente</em> para o R2.
+                        <pre><code class="javascript">fetch(upload_url, { method: 'PUT', body: videoBlob })</code></pre>
+                    </li>
+                </ol>
+            </section>
+
+            <!-- SLIDE 8: Frontend & Design -->
+            <section>
+                <h2>Frontend & UI</h2>
+                <div style="display: flex; align-items: center; justify-content: center; gap: 30px;">
+                    <div style="flex: 1; text-align: left;">
+                        <ul>
+                            <li class="fragment"><strong>Bootstrap 5:</strong> Layout responsivo, modais e grid system.</li>
+                            <li class="fragment"><strong>Design:</strong>Estilização com CSS.</li>
+                            <li class="fragment"><strong>JavaScript:</strong>Modificamos diretamente o DOM e scripting das páginas.</li>
+                        </ul>
+                    </div>
+                    <div style="flex: 1;" class="fragment">
+                        <pre><code class="css" data-trim>
+:root {
+    --primary-dark: #3E2723;
+    --card-bg-warm: #F9F6F0;
+    --action-color: #E65100;
+}
+/* Layout Flexível e Responsivo */
+.game-layout {
+    display: flex;
+    justify-content: center;
+}
+                        </code></pre>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SLIDE 9: Apresentação Prática -->
+            <section data-background-color="#3E2723">
+                <h1 style="color: #fff;">Demonstração Prática</h1>
+                <p style="color: #ddd;">Vamos ver o sistema em funcionamento.</p>
+                <hr style="width: 50%; border-color: #E65100;">
+                <ul style="color: #fff; list-style: none; font-size: 0.9em;">
+                    <li>-Login e Perfil</li>
+                    <li>-Lobby e Matchmaking</li>
+                    <li>-Gameplay</li>
+                    <li>-Gravação e Replay Automático</li>
+                </ul>
+            </section>
+
+            <!-- SLIDE 10: Final -->
+            <section>
+                <img src="images/favicon.png" style="width: 80px; border:none; box-shadow:none;">
+                <h2>Obrigado!</h2>
+                <p style="color: var(--text-muted);">Perguntas?</p>
+                <br>
+                <small>Projeto Damas Online - 2025</small>
+            </section>
+
+        </div>
+    </div>
+
+    <!-- Scripts do Reveal.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.0.4/reveal.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.0.4/plugin/highlight/highlight.min.js"></script>
+    
+    <script>
+        // Inicialização
+        Reveal.initialize({
+            hash: true,
+            controls: true,
+            progress: true,
+            center: true,
+            transition: 'slide', // none/fade/slide/convex/concave/zoom
+            
+            // Configuração do Plugin de código
+            plugins: [ RevealHighlight ]
+        });
+    </script>
+</body>
+</html>

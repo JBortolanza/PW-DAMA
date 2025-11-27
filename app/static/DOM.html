@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estrutura DOM - Damas Online</title>
+    <link rel="icon" href="images/favicon.png" type="image/png">
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
+    <!-- CSS Principal e do Visualizador -->
+    <link rel="stylesheet" href="CSS/style.css">
+    <link rel="stylesheet" href="CSS/dom-structure.css">
+</head>
+<body>
+    <div class="background-overlay"></div>
+
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container-fluid px-4">
+            <a class="btn-icon" href="index.html" title="Voltar ao Início">
+                <i class="bi bi-house-door-fill"></i>
+            </a>
+
+            <div class="navbar-brand mx-auto fw-bold d-none d-md-block text-gradient">
+                Estrutura do Projeto
+            </div>
+
+            <div style="width: 45px;"></div> <!-- Espaçador para equilíbrio -->
+        </div>
+    </nav>
+
+    <!-- CONTEÚDO PRINCIPAL -->
+    <main class="container main-content h-100 pb-4">
+        <div class="row h-100">
+            
+            <!-- Coluna de Controle (Seleção de Arquivos) -->
+            <div class="col-md-3 mb-3">
+                <div class="glass-card p-3 h-100 d-flex flex-column">
+                    <h5 class="fw-bold text-primary-custom mb-3"><i class="bi bi-file-earmark-code me-2"></i>Arquivos</h5>
+                    <div class="list-group file-selector" id="fileList">
+                        <!-- Preenchido via JS -->
+                    </div>
+                    
+                    <div class="mt-auto pt-3 border-top border-secondary-subtle">
+                        <small class="text-muted d-block mb-2">Estatísticas do DOM:</small>
+                        <div class="d-flex justify-content-between small">
+                            <span>Tags:</span> <span class="fw-bold" id="tagCount">-</span>
+                        </div>
+                        <div class="d-flex justify-content-between small">
+                            <span>Profundidade:</span> <span class="fw-bold" id="depthCount">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Coluna de Visualização (Árvore DOM) -->
+            <div class="col-md-9">
+                <div class="glass-card h-100 d-flex flex-column position-relative overflow-hidden">
+                    <div class="p-3 border-bottom border-secondary-subtle d-flex justify-content-between align-items-center bg-white bg-opacity-50">
+                        <span class="fw-bold font-monospace text-primary-dark" id="currentFileName">Selecione um arquivo...</span>
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-outline-secondary" onclick="expandAll()">Expandir Tudo</button>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="collapseAll()">Colapsar</button>
+                        </div>
+                    </div>
+                    
+                    <div class="dom-viewer-container p-3" id="domOutput">
+                        <div class="text-center text-muted mt-5">
+                            <i class="bi bi-code-slash fs-1 opacity-50"></i>
+                            <p class="mt-2">Selecione um arquivo HTML à esquerda para visualizar sua árvore DOM.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="JS/dom-structure.js"></script>
+</body>
+</html>

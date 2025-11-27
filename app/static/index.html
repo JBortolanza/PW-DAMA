@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Damas Online - Início</title>
+    <link rel="icon" href="images/favicon.png" type="image/png">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- CSS Principal -->
+    <link rel="stylesheet" href="CSS/style.css">
+</head>
+<body>
+    <div class="background-overlay"></div>
+
+    <!-- Loader -->
+    <div id="pageLoader" class="d-flex justify-content-center align-items-center position-fixed top-0 start-0 w-100 h-100 bg-white" style="z-index: 9999; transition: opacity 0.5s;">
+        <div class="spinner-border text-primary-custom" role="status">
+            <span class="visually-hidden">Carregando...</span>
+        </div>
+    </div>
+
+    <!-- HEADER -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container-fluid px-4">
+            <!-- Botão Home (Esquerda) -->
+            <a class="btn-icon" href="index.html" title="Recarregar">
+                <i class="bi bi-house-door-fill"></i>
+            </a>
+
+            <!-- Logo Central -->
+            <div class="navbar-brand mx-auto fw-bold d-none d-md-block text-gradient">
+                Damas Online
+            </div>
+
+            <!-- Avatar (Direita) -->
+            <div class="d-flex align-items-center gap-3">
+                <div class="text-end d-none d-sm-block">
+                    <span class="d-block text-muted small">Bem-vindo,</span>
+                    <span id="navUserName" class="fw-bold text-primary-custom">Jogador</span>
+                </div>
+                <a href="profile.html" class="profile-link" title="Meu Perfil">
+                    <img src="https://pw.jan.bortolanza.vms.ufsc.br/images/avatars/default/default_avatar.png" 
+                         alt="Perfil" 
+                         id="navAvatar" 
+                         class="nav-avatar">
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- CONTEÚDO PRINCIPAL -->
+    <main class="container main-content">
+        <div class="row g-4 h-100">
+            
+            <!-- COLUNA ESQUERDA: CHAT GLOBAL + REGRAS -->
+            <div class="col-lg-4 col-md-5">
+                <!-- Chat Container -->
+                <div class="glass-card chat-container d-flex flex-column">
+                    <div class="chat-header p-3 border-bottom d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 fw-bold text-primary-custom"><i class="bi bi-chat-dots-fill me-2"></i>Chat Global</h5>
+                        <span class="badge bg-success rounded-pill shadow-sm">● <span id="onlineCount">...</span> ON</span>
+                    </div>
+                    
+                    <div class="chat-messages flex-grow-1 p-3" id="chatMessages">
+                        <div class="message system">
+                            <small>Sistema: Bem-vindo ao lobby! Encontre um oponente ao lado.</small>
+                        </div>
+                    </div>
+
+                    <div class="chat-input-area p-3 border-top bg-light-subtle">
+                        <form id="chatForm" class="d-flex gap-2 align-items-center">
+                            <input type="text" class="form-control rounded-pill" id="messageInput" placeholder="Digite uma mensagem..." autocomplete="off">
+                            
+                            <button type="submit" class="btn btn-primary-custom rounded-circle" style="width: 40px; height: 40px; padding: 0; display: flex; align-items: center; justify-content: center;">
+                                <i class="bi bi-send-fill"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Box de Regras (Abaixo do Chat) -->
+                <div class="rules-box-container">
+                    <div class="glass-card">
+                        <h5 class="fw-bold text-primary-custom"><i class="bi bi-book-half me-2"></i>Regras do Jogo</h5>
+                        <div class="rules-content">
+                            <ul class="rules-list">
+                                <li><strong>Movimento:</strong> Peças comuns movem-se uma casa na diagonal para frente. A Dama pode mover-se e capturar livremente nas diagonais, percorrendo múltiplas casas.</li>
+                                <li><strong>Captura:</strong> Capturar peças adversárias é obrigatório. Pode-se capturar para frente ou para trás.</li>
+                                <li><strong>Dama:</strong> Ao atingir a última linha adversária, a peça vira Dama.</li>
+                                <li><strong>Vitória:</strong> Vence quem capturar todas as peças ou bloquear o adversário.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- COLUNA DIREITA: MENU DE JOGOS + RANKING -->
+            <div class="col-lg-8 col-md-7">
+                <div class="row g-4">
+                    <div class="col-12">
+                        <div class="glass-card hero-banner p-4 text-center">
+                            <h2 class="fw-bold mb-2 text-primary-custom">Modos de Jogo</h2>
+                            <p class="text-muted mb-0">Escolha seu desafio e mostre sua estratégia.</p>
+                        </div>
+                    </div>
+
+                    <!-- Card: Jogar Online -->
+                    <div class="col-md-6">
+                        <div class="game-option-card" id="btnFindMatch">
+                            <div class="icon-wrapper bg-gradient-orange">
+                                <i class="bi bi-globe-americas text-white fs-2"></i>
+                            </div>
+                            <h3>Jogar Online</h3>
+                            <p>Enfrente jogadores reais.</p>
+                            <button class="btn btn-sm btn-outline-primary mt-auto rounded-pill" id="btnTextMatch">Buscar Partida</button>
+                        </div>
+                    </div>
+
+                    <!-- Card: Contra CPU -->
+                    <div class="col-md-6">
+                        <div class="game-option-card" onclick="window.location.href='offline_game.html?mode=cpu'">
+                            <div class="icon-wrapper bg-gradient-brown">
+                                <i class="bi bi-cpu-fill text-white fs-2"></i>
+                            </div>
+                            <h3>Contra o BOT</h3>
+                            <p>Treine suas táticas contra nossa Inteligência Artificial.</p>
+                            <button class="btn btn-sm btn-outline-primary mt-auto rounded-pill">Jogar Agora</button>
+                        </div>
+                    </div>
+
+                    <!-- Card: Ranking -->
+                    <div class="col-12">
+                        <div class="glass-card p-0">
+                            <div class="p-3 border-bottom d-flex justify-content-between align-items-center bg-inner-warm">
+                                <h5 class="mb-0 fw-bold text-primary-custom"><i class="bi bi-trophy-fill text-warning me-2"></i>Ranking Global</h5>
+                                <small class="text-muted">Top Jogadores</small>
+                            </div>
+                            <div class="ranking-list p-2" id="rankingList">
+                                <div class="text-center p-3"><div class="spinner-border spinner-border-sm text-muted"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- FOOTER ATUALIZADO -->
+    <footer class="footer mt-auto py-4 text-center glass-footer">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <p class="mb-2 fw-bold text-primary-custom">Damas Online &copy; 2025</p>
+                    <p class="text-muted small mb-3">
+                        Desenvolvido como projeto de Programação Web
+                    </p>
+                    <div class="d-flex justify-content-center gap-3 footer-info">
+                        <a href="DOM.html" class="footer-link"><i class="bi bi-code-slash me-1"></i> Estrutura DOM</a>
+                        <span class="text-muted">|</span>
+                        <a href="https://github.com/jbortolanza/pw-dama" class="footer-link" target="_blank"><i class="bi bi-github me-1"></i> GitHub</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="JS/auth.js"></script>
+    <script src="JS/index.js"></script>
+</body>
+</html>

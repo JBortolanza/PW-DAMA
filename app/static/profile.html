@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfil do Usuário - Damas Online</title>
+    <link rel="icon" href="images/favicon.png" type="image/png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- Link para o CSS externo -->
+    <link rel="stylesheet" href="CSS/profile.css">
+</head>
+<body>
+    <div class="background-overlay"></div>
+    
+    <div class="profile-container">
+        <div class="profile-card">
+            <div class="card-header">
+                <div class="header-content">
+                    <div class="header-buttons">
+                        <button class="btn btn-icon" onclick="goToHome()" title="Ir para Início">
+                            <i class="bi bi-house-door-fill"></i>
+                        </button>
+                    </div>
+                    <div class="header-center text-center">
+                        <h1 class="profile-logo">Damas Online</h1>
+                        <p class="welcome-text">Perfil do Jogador</p>
+                    </div>
+                    <div class="header-buttons">
+                        <button class="btn btn-icon btn-logout" onclick="logout()" title="Sair">
+                            <i class="bi bi-box-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card-body d-flex flex-column">
+                <div id="loadingSpinner" class="text-center py-5" style="display: none;">
+                    <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;">
+                        <span class="visually-hidden">Carregando...</span>
+                    </div>
+                    <p class="mt-3">Carregando perfil...</p>
+                </div>
+
+                <div id="profileContent" class="h-100">
+                    <div class="row h-100 g-4">
+                        
+                        <!-- Coluna Esquerda (Info) -->
+                        <div class="col-lg-4 d-flex flex-column gap-3">
+                            <div class="profile-box text-center p-4">
+                                <img src="https://via.placeholder.com/150" alt="Avatar" class="profile-avatar" id="userAvatar">
+                                <button class="btn btn-outline-primary btn-sm mt-3 rounded-pill" data-bs-toggle="modal" data-bs-target="#avatarModal">
+                                    <i class="bi bi-camera"></i> Alterar Avatar
+                                </button>
+                            </div>
+                            
+                            <div class="profile-box p-4">
+                                <h4 class="mb-3 text-center" id="userName">...</h4>
+                                <div class="info-row mb-2 text-center">
+                                    <i class="bi bi-envelope text-muted me-2"></i>
+                                    <span id="userEmail" class="text-muted">...</span>
+                                </div>
+                                <div class="info-row mb-2 text-center">
+                                    <i class="bi bi-geo-alt text-muted me-2"></i>
+                                    <span id="userLocation" class="text-muted">...</span>
+                                </div>
+                                <div class="info-row mt-3 text-center">
+                                    <p id="userBio" class="mb-0 small text-muted fst-italic">...</p>
+                                </div>
+                                <button class="btn btn-primary w-100 mt-3 rounded-pill" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+                                    Editar Perfil
+                                </button>
+                            </div>
+                            
+                            <div class="profile-box p-4 flex-grow-1">
+                                <h5 class="mb-3 border-bottom pb-2 border-secondary-subtle text-center">Estatísticas</h5>
+                                <div class="stat-item">
+                                    <span class="stat-label">Partidas</span>
+                                    <span class="stat-value" id="totalGames">-</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label text-success">Vitórias</span>
+                                    <span class="stat-value text-success" id="wins">-</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label text-danger">Derrotas</span>
+                                    <span class="stat-value text-danger" id="losses">-</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">Empates</span>
+                                    <span class="stat-value" id="draws">-</span>
+                                </div>
+                                <div class="stat-item mt-2 pt-2 border-top border-dashed">
+                                    <span class="stat-label">Aproveitamento</span>
+                                    <span class="stat-value fs-5" id="winRate">-</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Coluna Direita (Histórico) -->
+                        <div class="col-lg-8 h-100">
+                            <div class="profile-box h-100 d-flex flex-column p-0 overflow-hidden">
+                                <div class="p-3 border-bottom border-secondary-subtle bg-opacity-10 bg-warning d-flex justify-content-between align-items-center">
+                                    <h4 class="mb-0"><i class="bi bi-film me-2"></i>Galeria de Partidas</h4>
+                                    <button class="btn btn-sm btn-outline-primary rounded-circle" onclick="loadGameHistory()">
+                                        <i class="bi bi-arrow-clockwise"></i>
+                                    </button>
+                                </div>
+                                
+                                <div class="games-list p-3 flex-grow-1" id="gamesList">
+                                    <!-- Cards injetados via JS -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modais -->
+    <div class="modal fade" id="editProfileModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Editar Perfil</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editProfileForm">
+                        <div class="mb-3">
+                            <label class="form-label">Nome</label>
+                            <input type="text" class="form-control" id="editName">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" id="editEmail">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Localização</label>
+                            <input type="text" class="form-control" id="editLocation">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Biografia</label>
+                            <textarea class="form-control" id="editBio" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="saveProfileChanges()">Salvar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="avatarModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Alterar Avatar</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center mb-3">
+                        <img src="" alt="Atual" class="profile-avatar mb-3" id="currentAvatar" style="width: 100px; height: 100px;">
+                    </div>
+                    <div class="d-flex justify-content-around flex-wrap" id="avatarOptions"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="saveAvatar()">Salvar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="JS/profile.js"></script>
+</body>
+</html>

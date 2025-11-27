@@ -1,0 +1,84 @@
+/* Container da Árvore */
+.dom-viewer-container {
+    flex: 1;
+    overflow: auto;
+    background-color: #fff; /* Fundo branco papel */
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #333;
+    border-radius: 0 0 16px 16px;
+}
+
+/* Lista de Seleção de Arquivos */
+.file-selector .list-group-item {
+    background: transparent;
+    border: 1px solid rgba(0,0,0,0.05);
+    color: var(--text-main);
+    cursor: pointer;
+    transition: all 0.2s;
+    border-radius: 8px;
+    margin-bottom: 5px;
+    font-weight: 600;
+}
+
+.file-selector .list-group-item:hover {
+    background-color: rgba(62, 39, 35, 0.05);
+    transform: translateX(3px);
+}
+
+.file-selector .list-group-item.active {
+    background-color: var(--primary-dark);
+    border-color: var(--primary-dark);
+    color: #fff;
+}
+
+/* --- Estilização da Árvore DOM --- */
+
+/* Linha do elemento */
+.dom-node {
+    padding-left: 20px; /* Indentação */
+    position: relative;
+    white-space: nowrap;
+}
+
+/* Setinha de colapso */
+.toggle-btn {
+    cursor: pointer;
+    color: #999;
+    margin-left: -15px;
+    margin-right: 5px;
+    font-size: 0.8em;
+    display: inline-block;
+    width: 10px;
+    user-select: none;
+}
+
+.toggle-btn:hover { color: var(--action-color); }
+.toggle-btn.hidden { visibility: hidden; }
+.toggle-btn.collapsed { transform: rotate(-90deg); }
+
+/* Highlight de Sintaxe */
+.tag-name { color: #800000; font-weight: bold; } /* Marrom Avermelhado */
+.attr-name { color: #E65100; margin-left: 5px; } /* Laranja */
+.attr-value { color: #2E7D32; } /* Verde */
+.text-content { color: #333; font-style: italic; }
+.comment { color: #999; font-style: italic; }
+
+/* Container de filhos (para colapsar) */
+.children-container {
+    display: block;
+}
+.children-container.collapsed {
+    display: none;
+}
+
+/* Efeito Hover na linha */
+.node-line {
+    display: inline-block;
+    width: 100%;
+    border-radius: 4px;
+}
+.node-line:hover {
+    background-color: rgba(230, 81, 0, 0.1); /* Highlight suave laranja */
+}
